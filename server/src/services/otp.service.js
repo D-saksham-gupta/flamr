@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 // ── Send OTP via Email ────────────────────────────────────
 export const sendOTPEmail = async (email, otp) => {
   const mailOptions = {
-    from: `"Flamr 🔥" <${process.env.EMAIL_USER}>`,
+    from: `${process.env.EMAIL_USER}`,
     to: email,
     subject: "Your Flamr verification code",
     html: `
