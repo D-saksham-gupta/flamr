@@ -18,9 +18,8 @@ import { apiLimiter } from "./middleware/rateLimiter.middleware.js";
 
 const app = express();
 // Trust proxy (needed for rate limiting behind reverse proxy)
-if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
-}
+// ── Trust proxy (required for Render, Railway, Heroku etc.) ──
+app.set("trust proxy", 1);
 
 // ── Security & Parsing ────────────────────────────────────
 app.use(helmet());
