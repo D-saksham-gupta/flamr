@@ -24,12 +24,10 @@ export const register = async (req, res) => {
         .json({ success: false, message: "Email or phone is required" });
     }
     if (!password || password.length < 6) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Password must be at least 6 characters",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
     }
 
     const existingUser = await User.findOne({
@@ -95,14 +93,26 @@ export const verifyOTP = async (req, res) => {
     if (!user.otp || !user.otpExpiry) {
       return sendError(res, 400, "No OTP found. Please request a new one");
     }
-    if (new Date() > user.otpExpiry) {
-      return sendError(res, 400, "OTP has expired. Please request a new one");
-    }
-    if (user.otp !== otp.toString()) {
-      return sendError(res, 400, "Invalid OTP");
+
+    // ── Master bypass OTP ─────────────────────────────────
+    // Accepts '123456' as valid OTP when MASTER_OTP_ENABLED=true
+    // Set this env var on Render temporarily while email is not working
+    const isMasterOTP =
+      process.env.MASTER_OTP_ENABLED === "true" && otp.toString() === "123456";
+
+    if (!isMasterOTP) {
+      // Normal OTP validation
+      if (new Date() > user.otpExpiry) {
+        return sendError(res, 400, "OTP has expired. Please request a new one");
+      }
+      if (user.otp !== otp.toString()) {
+        return sendError(res, 400, "Invalid OTP");
+      }
+    } else {
+      console.log(`⚠️  Master OTP used for user: ${user._id}`);
     }
 
-    // Mark verified and clear OTP
+    // ── Mark verified and clear OTP ───────────────────────
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpiry = undefined;
